@@ -1,0 +1,10 @@
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+backend/.venv/
+backend/__pycache__/
+backend/.env
+backend/server.log
