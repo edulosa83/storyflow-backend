@@ -62,7 +62,7 @@ repo_html_url="$(echo "$create_repo_resp" | jq -r '.html_url // empty')"
 
 if [[ -z "$repo_full_name" ]]; then
   msg="$(echo "$create_repo_resp" | jq -r '.message // .errors[0].message // empty')"
-  if [[ "$msg" == *"name already exists"* || "$msg" == *"already exists"* ]]; then
+  if [[ "$msg" == *"name already exists"* || "$msg" == *"already exists"* || "$msg" == *"Repository creation failed."* ]]; then
     echo "Repo ya existe; recuperando datos"
     user_login="$(curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" -H 'Accept: application/vnd.github+json' https://api.github.com/user | jq -r '.login')"
     repo_full_name="$user_login/$REPO_NAME"
