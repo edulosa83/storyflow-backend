@@ -13,8 +13,8 @@ Para que funcione sin conectar el celular a tu compu, el backend debe estar en n
 
 La app ya quedó preparada para eso:
 
-- Puedes cambiar la URL del backend desde la pantalla principal (`Backend URL` + `Guardar backend`).
-- También puedes compilar con URL fija usando `-PSTORYFLOW_BACKEND_URL=...`.
+- Usa URL fija del backend desde código (`BuildConfig.BACKEND_BASE_URL`).
+- Puedes compilar con URL fija usando `-PSTORYFLOW_BACKEND_URL=...`.
 
 ## 1) App Android
 
@@ -38,6 +38,7 @@ El backend está en `backend/` y trae `Dockerfile`.
 
 - `IG_USERNAME`
 - `IG_SESSION_B64` (recomendado en nube)
+- Opcional: `IG_PASSWORD` para que el backend intente recuperar sesión automáticamente si expira.
 
 Genera `IG_SESSION_B64` desde tu sesión local:
 
@@ -53,7 +54,19 @@ Genera `IG_SESSION_B64` desde tu sesión local:
    - `IG_SESSION_B64`
 3. Verifica `GET /health`.
 4. Copia la URL pública HTTPS.
-5. En la app, pega esa URL en `Backend URL` y toca `Guardar backend`.
+5. Compila la app con esa URL (`-PSTORYFLOW_BACKEND_URL=...`) e instala el APK.
+
+Si ves error `503` con mensaje de sesión/challenge:
+
+1. Renueva la sesión de Instagram.
+2. Regenera `IG_SESSION_B64`.
+3. Actualiza la variable en Render/Railway y redeploy.
+
+Atajo para Render:
+
+```bash
+RENDER_API_KEY=tu_api_key ./scripts/refresh_render_session.sh
+```
 
 ## 3) Flujo local por USB (solo debug)
 
