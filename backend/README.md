@@ -21,6 +21,10 @@ Obligatorias:
   - `IG_SESSION_FILE`
   - `IG_SESSION_B64`
 
+Opcional:
+
+- `IG_PASSWORD` para reintento de login automático si la sesión cargada expiró.
+
 `IG_SESSION_B64` es ideal para Railway/Render porque evita montar archivos.
 
 ## Local
@@ -58,3 +62,4 @@ curl http://127.0.0.1:8080/health
 
 - La sesión de Instagram expira; cuando falle, recaptura sesión y actualiza `IG_SESSION_B64`.
 - `downloadUrl` puede expirar, así que conviene descargar en cuanto se listan las stories.
+- Si Instagram limita temporalmente la cuenta, el endpoint responde `503` con detalle para que la app muestre un mensaje claro.
