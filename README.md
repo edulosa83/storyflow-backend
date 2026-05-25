@@ -68,6 +68,13 @@ Atajo para Render:
 RENDER_API_KEY=tu_api_key ./scripts/refresh_render_session.sh
 ```
 
+Flujo completo recomendado:
+
+```bash
+./scripts/renew_instagram_session.sh
+RENDER_API_KEY=tu_api_key ./scripts/refresh_render_session.sh
+```
+
 ## 3) Flujo local por USB (solo debug)
 
 Si quieres volver a usar backend local:

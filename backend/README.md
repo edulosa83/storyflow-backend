@@ -63,3 +63,6 @@ curl http://127.0.0.1:8080/health
 - La sesión de Instagram expira; cuando falle, recaptura sesión y actualiza `IG_SESSION_B64`.
 - `downloadUrl` puede expirar, así que conviene descargar en cuanto se listan las stories.
 - Si Instagram limita temporalmente la cuenta, el endpoint responde `503` con detalle para que la app muestre un mensaje claro.
+- Desde la raíz del repo puedes usar:
+  - `./scripts/renew_instagram_session.sh`
+  - `RENDER_API_KEY=... ./scripts/refresh_render_session.sh`
