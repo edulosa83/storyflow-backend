@@ -36,9 +36,11 @@ El backend está en `backend/` y trae `Dockerfile`.
 
 ### Variables necesarias
 
-- `IG_USERNAME`
-- `IG_SESSION_B64` (recomendado en nube)
-- Opcional: `IG_PASSWORD` para que el backend intente recuperar sesión automáticamente si expira.
+- Con el backend actual (modo `external` por default), no necesitas cuenta de Instagram en el servidor.
+- Si quieres modo `instaloader` o `hybrid`, entonces sí usas:
+  - `IG_USERNAME`
+  - `IG_SESSION_B64` (recomendado en nube)
+  - opcional `IG_PASSWORD`
 
 Genera `IG_SESSION_B64` desde tu sesión local:
 
@@ -49,14 +51,12 @@ Genera `IG_SESSION_B64` desde tu sesión local:
 ### Render / Railway (resumen)
 
 1. Crea un servicio web desde este repo usando `backend/Dockerfile`.
-2. Configura variables:
-   - `IG_USERNAME`
-   - `IG_SESSION_B64`
+2. (Opcional) Configura variables solo si vas a usar `instaloader`/`hybrid`.
 3. Verifica `GET /health`.
 4. Copia la URL pública HTTPS.
 5. Compila la app con esa URL (`-PSTORYFLOW_BACKEND_URL=...`) e instala el APK.
 
-Si ves error `503` con mensaje de sesión/challenge:
+Si usas `instaloader`/`hybrid` y ves error `503` con mensaje de sesión/challenge:
 
 1. Renueva la sesión de Instagram.
 2. Regenera `IG_SESSION_B64`.

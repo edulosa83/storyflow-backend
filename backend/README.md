@@ -14,18 +14,22 @@ Request:
 
 ## Variables de entorno
 
-Obligatorias:
+Resolver (opcional):
+
+- `STORYFLOW_RESOLVER_MODE`:
+  - `external` (default): usa proveedor externo público, no requiere cuenta de Instagram.
+  - `hybrid`: intenta proveedor externo y si falla, usa Instaloader si hay sesión configurada.
+  - `instaloader`: usa solo Instaloader.
+
+Solo para `hybrid`/`instaloader`:
 
 - `IG_USERNAME`
 - Uno de estos dos:
   - `IG_SESSION_FILE`
   - `IG_SESSION_B64`
+- `IG_PASSWORD` (opcional) para reintento de login automático si la sesión cargada expiró.
 
-Opcional:
-
-- `IG_PASSWORD` para reintento de login automático si la sesión cargada expiró.
-
-`IG_SESSION_B64` es ideal para Railway/Render porque evita montar archivos.
+`IG_SESSION_B64` es ideal para Railway/Render porque evita montar archivos, pero solo aplica cuando activas modo `instaloader`/`hybrid`.
 
 ## Local
 
@@ -60,9 +64,8 @@ curl http://127.0.0.1:8080/health
 
 ## Notas operativas
 
-- La sesión de Instagram expira; cuando falle, recaptura sesión y actualiza `IG_SESSION_B64`.
+- En modo `external` no dependes de tu cuenta personal de Instagram.
 - `downloadUrl` puede expirar, así que conviene descargar en cuanto se listan las stories.
-- Si Instagram limita temporalmente la cuenta, el endpoint responde `503` con detalle para que la app muestre un mensaje claro.
-- Desde la raíz del repo puedes usar:
+- Si decides usar `instaloader`/`hybrid`, la sesión puede expirar y tendrás que renovarla:
   - `./scripts/renew_instagram_session.sh`
   - `RENDER_API_KEY=... ./scripts/refresh_render_session.sh`
