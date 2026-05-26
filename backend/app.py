@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import os
 import re
 from time import sleep
@@ -61,6 +62,8 @@ _IGSAVER_ENDPOINT = "https://igsaver.io/api/download"
 _IGSAVER_CONNECT_TIMEOUT_SEC = 8
 _IGSAVER_READ_TIMEOUT_SEC = 25
 _IGSAVER_RETRIES = 1
+_LONG_NUMERIC_TOKEN_REGEX = re.compile(r"(\d{8,})")
+_MEDIA_ID_CLEAN_REGEX = re.compile(r"[^0-9A-Za-z_-]+")
 
 SessionState = Literal["ok", "invalid", "rate_limited", "challenge", "connection_error"]
 
@@ -335,6 +338,40 @@ def make_igsaver_target(raw_input: str) -> tuple[str, str]:
     return f"https://www.instagram.com/stories/{username}/", username
 
 
+def short_stable_hash(value: str) -> str:
+    return hashlib.sha1(value.encode("utf-8")).hexdigest()[:16]
+
+
+def clean_media_id(raw_media_id: str) -> str:
+    return _MEDIA_ID_CLEAN_REGEX.sub("", raw_media_id.strip())
+
+
+def provider_media_id_is_weak(media_id: str) -> bool:
+    if not media_id:
+        return True
+    # Providers sometimes return only 1,2,3... which is not stable globally.
+    return bool(re.fullmatch(r"\d{1,5}", media_id))
+
+
+def extract_long_numeric_token_from_url(url: str) -> Optional[str]:
+    parsed = urlparse(url)
+    target = f"{parsed.path}?{parsed.query}" if parsed.query else parsed.path
+    matches = _LONG_NUMERIC_TOKEN_REGEX.findall(target or "")
+    return matches[-1] if matches else None
+
+
+def build_stable_media_id(username: str, raw_provider_id: str, media_url: str) -> str:
+    url_token = extract_long_numeric_token_from_url(media_url)
+    if url_token:
+        return url_token
+
+    provider_id = clean_media_id(raw_provider_id)
+    if provider_id and not provider_media_id_is_weak(provider_id):
+        return provider_id
+
+    return f"{username}_{short_stable_hash(media_url)}"
+
+
 def parse_igsaver_items(payload: dict, fallback_username: str) -> List[StoryMediaOut]:
     raw_items = payload.get("items") if isinstance(payload, dict) else None
     if not isinstance(raw_items, list):
@@ -346,7 +383,7 @@ def parse_igsaver_items(payload: dict, fallback_username: str) -> List[StoryMedi
     username = (username or fallback_username or "instagram").strip()
 
     items: List[StoryMediaOut] = []
-    for idx, item in enumerate(raw_items):
+    for item in raw_items:
         if not isinstance(item, dict):
             continue
 
@@ -357,7 +394,7 @@ def parse_igsaver_items(payload: dict, fallback_username: str) -> List[StoryMedi
 
         media_type = (item.get("media_type") or "").strip().lower()
         is_video = media_type in {"video", "reel", "clip"}
-        media_id = (str(item.get("id") or "").strip()) or f"{username}_{idx}_{abs(hash(media_url))}"
+        media_id = build_stable_media_id(username, str(item.get("id") or ""), media_url)
 
         items.append(
             StoryMediaOut(

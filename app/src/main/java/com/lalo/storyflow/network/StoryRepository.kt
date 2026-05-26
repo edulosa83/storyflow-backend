@@ -8,6 +8,8 @@ import kotlinx.coroutines.delay
 import org.json.JSONObject
 import java.io.InterruptedIOException
 import java.net.SocketTimeoutException
+import java.security.MessageDigest
+import java.util.Locale
 import retrofit2.HttpException
 
 class StoryRepository(
@@ -29,8 +31,11 @@ class StoryRepository(
                 }
 
                 StoryMedia(
-                    id = dto.id?.trim().takeUnless { it.isNullOrBlank() }
-                        ?: "${username}_${downloadUrl.hashCode()}",
+                    id = buildStableMediaId(
+                        rawId = dto.id,
+                        username = username,
+                        downloadUrl = downloadUrl
+                    ),
                     username = username,
                     mediaType = when (dto.mediaType?.lowercase()) {
                         "video" -> MediaType.VIDEO
@@ -114,6 +119,40 @@ class StoryRepository(
         return runCatching {
             JSONObject(body).optString("detail").takeIf { it.isNotBlank() }
         }.getOrNull()
+    }
+
+    private fun buildStableMediaId(rawId: String?, username: String, downloadUrl: String): String {
+        val urlToken = extractLongNumericToken(downloadUrl)
+        if (urlToken != null) {
+            return urlToken
+        }
+
+        val cleanedProviderId = rawId
+            ?.trim()
+            ?.replace(Regex("[^0-9A-Za-z_-]+"), "")
+            .orEmpty()
+
+        if (cleanedProviderId.isNotBlank() && !cleanedProviderId.matches(Regex("\\d{1,5}"))) {
+            return cleanedProviderId
+        }
+
+        return "${username}_${shortStableHash(downloadUrl)}"
+    }
+
+    private fun extractLongNumericToken(value: String): String? {
+        return Regex("(\\d{8,})")
+            .findAll(value)
+            .lastOrNull()
+            ?.value
+    }
+
+    private fun shortStableHash(value: String): String {
+        val bytes = MessageDigest
+            .getInstance("SHA-256")
+            .digest(value.toByteArray())
+        return bytes.joinToString(separator = "") { byte ->
+            String.format(Locale.US, "%02x", byte.toInt() and 0xFF)
+        }.take(16)
     }
 
     private companion object {
